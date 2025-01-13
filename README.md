@@ -1,4 +1,4 @@
-# Sun_P_NP
+# 2025SunRuntime
 
 The code links to the paper: Runtime Analysis of Evolutionary Algorithms for Multiparty Multiobjective Optimization
 
