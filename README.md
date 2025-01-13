@@ -4,6 +4,6 @@ The code links to the paper: Runtime Analysis of Evolutionary Algorithms for Mul
 
 Authors of the paper:Yuetong Sun, Peilan Xu, Wenjian Luo
 
-Preprint submitted to Swarm and Evolutionary Computation
+Preprint submitted to Artificial Intelligence
 
 The paper has been submitted to arXiv for review
