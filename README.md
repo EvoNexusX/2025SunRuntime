@@ -6,5 +6,8 @@ Authors of the paper:Yuetong Sun, Peilan Xu, Wenjian Luo
 
 Preprint submitted to Artificial Intelligence
 
-The paper has been submitted to arXiv for review
+This is the official repository for paper：https://arxiv.org/abs/2501.16336
+
+
+
 
