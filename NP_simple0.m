@@ -7,7 +7,7 @@
 % addpath(genpath(pwd)); %将所有目录和子目录添加到运行文件夹下
 
 
-function final_epsilon = NP_simple(maxFE,problem)
+function final_epsilon = NP_simple0(maxFE,problem)
 % 初始化种群
 %problem = UAV5(1);
 epsilon = problem.epsilon; %近似程度，两方相同
@@ -96,18 +96,19 @@ end
 
 
 % 完成循环得到两方的种群之后，开始寻找纳什均衡解
-epsilon1i = ones(1,size(obj_p_1,2)) * (1 + 50); %直接初始化为最大值，省去后面再赋值为最大值的操作了
+% 对于PF2中的个体去找与PF1的交集，使用第一方的两个目标进行判断。因为公共解中的第二方目标值几乎为0，近似程度对他不起作用。
+epsilon2i = ones(1,size(obj_p_2,2)) * (1 + 50); %直接初始化为最大值，省去后面再赋值为最大值的操作了
 
-%遍历第一方的每个个体，计算其所对应的最小epsilon
-for j = 1:size(obj_p_1,2) 
-    epsilon2i = zeros(1,size(obj_p_2,2));
-    %对于第一方的每个个体，去计算他和第二方的所有个体中最小的近似程度
-    for k = 1:size(obj_p_2,2) %两两进行比较，但是只有终点相同才可比
-        epsilon2i(:,k) = find_nash_epsilon(obj_p_1{j}, obj_p_2{k}, singlenobj+1, nobj, {p_1{j}}, p_2{k});
+%遍历第二方的每个个体，计算其所对应的最小epsilon
+for j = 1:size(obj_p_2,2) 
+    epsilon1i = zeros(1,size(obj_p_1,2));
+    %对于第二方的每个个体，去计算他和第一方的所有个体中最小的近似程度
+    for k = 1:size(obj_p_1,2) %两两进行比较，但是只有终点相同才可比
+        epsilon1i(:,k) = find_nash_epsilon(obj_p_2{j}, obj_p_1{k}, 1, singlenobj, {p_2{j}}, p_1{k});
     end
     
-    if min(epsilon2i) <= 1+50 %最小值小于最大的那个上界
-        epsilon1i(:,j) = min(epsilon2i); %取其中的最小值
+    if min(epsilon1i) <= 1+50 %最小值小于最大的那个上界
+        epsilon2i(:,j) = min(epsilon1i); %取其中的最小值
     %否则不用改动，因为已经初始化为最大值了
     end
 end
@@ -116,10 +117,10 @@ end
 
 %%对于每个终点，找到其中的最小值，并返回对应的索引。
 %获取每个粒子的终点
-num_particles = length(p_1);  %获取相应粒子个数 
+num_particles = length(p_2);  %获取相应粒子个数 
 endpoints = zeros(1, num_particles);
 for j = 1:num_particles
-    endpoints(j) = p_1{j}(end);  % 如果粒子是向量形式
+    endpoints(j) = p_2{j}(end);  % 如果粒子是向量形式
 end
 
 %按照终点分组
@@ -130,7 +131,7 @@ for i = 1:length(unique_endpoints)
     group_indices = find(endpoints == ep); %得到两者值相等的元素索引
     
     if ~isempty(group_indices) %一般不会为空，因为本来就是从这里面提取出来的
-        [~, local_min_pos] = min(epsilon1i(group_indices));  % 找组内最小epsilon（终点相同的组里面去找）
+        [~, local_min_pos] = min(epsilon2i(group_indices));  % 找组内最小epsilon（终点相同的组里面去找）
         best_j = group_indices(local_min_pos);               % 得到原始索引
         selected_indices(end+1) = best_j; %一直在后面添加元素，得到的是每个终点分组中，近似程度最小的粒子索引
     end
@@ -138,8 +139,8 @@ end
 
 
 %根据索引找到最终的纳什均衡解，及其目标值
-nashsolution = p_1(selected_indices);
-nashobjective = obj_p_1(selected_indices);
+nashsolution = p_2(selected_indices);
+nashobjective = obj_p_2(selected_indices);
 
 
 %寻找最终得到的这个纳什解集到公共解的近似程度
@@ -179,7 +180,7 @@ end
 
 
 
-%% 对于第一方的每个解，寻找第二方中能够满足的最小epsilon（寻找纳什均衡解）
+%% 对于第二方的每个解，寻找第一方中能够满足的最小epsilon（寻找纳什均衡解）
 function epsilon_min = find_nash_epsilon(obj_P, obj_common, startt, endd, P, common)
 
     min_epsilons = zeros(1, size(obj_P, 1));
@@ -221,7 +222,7 @@ function finalresult = check_nash(obj_P, obj_common, epsilon, startt, endd, P, c
     % 遍历公共解中的每个粒子，观察他是否能被支配
     for i = 1:size(matching_common, 1)
         % 遍历种群中的每个粒子，看他能不能支配公共解
-        if epsilondominates(obj_P(:, startt:endd), matching_common(i, startt:endd),epsilon)  % 只判断第二方上面的目标值
+        if epsilondominates(obj_P(:, startt:endd), matching_common(i, startt:endd),epsilon)  % 只判断第一方上面的目标值
             result(i) = true;  % 如果支配，则改为1
             break;  % 一旦支配，跳出内层循环
         end

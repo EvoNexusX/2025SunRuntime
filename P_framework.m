@@ -4,7 +4,7 @@ close all %清理橱窗
 rng(1) %确保随机数生成是可重复的
 addpath(genpath(pwd)); %将所有目录和子目录添加到运行文件夹下
 
-PHI=0.5;
+PHI=0.95;
 D_values = 10:10:200;
 
 results_multi = zeros(1, length(D_values));
@@ -17,7 +17,7 @@ results_payoff = zeros(1, length(D_values));
 std_payoff = zeros(1, length(D_values));
     
 % 遍历每个D值，计算平均值
-for i = 1:length(D_values)
+for i = 1:length(D_values)  %对于每一个问题大小
     dim = D_values(i);
     runs_multi= zeros(1, 10);
     runs_simple = zeros(1, 10);
@@ -29,7 +29,7 @@ for i = 1:length(D_values)
         runs_random(j) = log(P_random_1(dim,PHI)); 
         runs_payoff(j) = log(P_payoff(dim));
     end
-    results_multi(i) = mean(runs_multi);
+    results_multi(i) = mean(runs_multi); %对于每一个问题大小，得到10次运行的均值与方差
     std_multi(i) = std(runs_multi);
     results_simple(i) = mean(runs_simple);
     std_simple(i) = std(runs_simple);

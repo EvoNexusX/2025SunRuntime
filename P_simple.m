@@ -1,15 +1,17 @@
+% 简单算法的截止时间是两方种群都求完自己的PF的时候
 
 % clear
 % clc
 % close all %清理橱窗
 % rng(1) %确保随机数生成是可重复的
 % addpath(genpath(pwd)); %将所有目录和子目录添加到运行文件夹下
+
 function t = P_simple(D)
 % the hole framework begin
-dm = 2; % 参与者数量
-nobj = 4; %目标数量
-singlenobj = 2; 
-common_pf = ones(1,D); 
+dm = 2; % 参与者数量，一共有两个人
+nobj = 4; %目标数量,一共有4个目标
+singlenobj = 2; % 每个参与方的有两个目标
+common_pf = ones(1,D); %公共解是全1的向量
 common_obj = BPAOAZ(common_pf);
 common = [common_pf common_obj];
 
@@ -32,45 +34,46 @@ p_2 = p_1;
 phi = p_1;
 % begin iterations to uodate population
 tic; % 开始计时
-while ~( check_1(p_1, D, singlenobj, pf_1) && check_2(p_2, D, singlenobj, pf_2) ) 
+while ~( check_1(p_1, D, singlenobj, pf_1) && check_2(p_2, D, singlenobj, pf_2) )  % 简单算法的截止时间是两方种群都求完自己的PF的时候
     
     for p = [1,2] 
         
         %确定本轮遍历的种群以及优化方向
         if p==1
             population = p_1;
-            choosed_direction = 0; 
+            choosed_direction = 0; % 此时优化方向为参与方1
         elseif p==2
             population = p_2;
-            choosed_direction = singlenobj; 
+            choosed_direction = singlenobj; % 此时优化方向为参与方2
         end
-        cd = singlenobj - choosed_direction; 
+        cd = singlenobj - choosed_direction; %用于phi更新的那里
         
         %随机均匀地从种群中选择一个粒子
-        randnum = randi([1, size(population,1)]); 
-        mutate_x = population(randnum,1:D); 
-        x_prime = mutate_x;
+        randnum = randi([1, size(population,1)]); % 从1到种群粒子数量之间随机选择一个整数
+        mutate_x = population(randnum,1:D); %从种群中随机选择到的一个粒子
+        x_prime = mutate_x;%待变异的粒子
 
 
         %粒子进行进化 one-bit mutation，即随机选择一位然后将其变异
-        mutation_index = randi([1, D]); 
-        x_prime(mutation_index) = 1-x_prime(mutation_index); 
-        obj_x = BPAOAZ(x_prime);
+        mutation_index = randi([1, D]); % 随机选择一个位置
+        x_prime(mutation_index) = 1-x_prime(mutation_index); %完成一位翻转
+        obj_x = BPAOAZ(x_prime); %计算粒子的目标值
         x=[x_prime, obj_x];
 
         
         
         %对种群中的粒子进行筛选,优胜略汰
+        %首先判断这个方向上有没有好的粒子出现，如果没有就不用进行后续判断了
         dominated = false;
-        for z = 1:size(population,1)
+        for z = 1:size(population,1) %这里判断的时候用弱支配
             if weakdominates(population(z,D+1+choosed_direction:D+singlenobj+choosed_direction), obj_x(1+choosed_direction:singlenobj+choosed_direction))
-                dominated = true;
+                dominated = true;%这时就说明种群中存在比他好或者跟他一样的粒子，这时就不用添加新粒子了。
                 break;
             end
         end
 
-        if ~dominated 
-            population = [population(~arrayfun(@(z) dominates(... 
+        if ~dominated %说明种群中没有比他好的，可以更新种群，去掉种群中被他支配的粒子
+            population = [population(~arrayfun(@(z) dominates(... %有相等的粒子的话在上一步就被卡掉了。能到这一步说明没有相等的，用大于等于没事
                 obj_x(1+choosed_direction:singlenobj+choosed_direction), population(z,D+1+choosed_direction:D+singlenobj+choosed_direction)), 1:size(population,1)), :); x];
             
             
@@ -86,13 +89,13 @@ while ~( check_1(p_1, D, singlenobj, pf_1) && check_2(p_2, D, singlenobj, pf_2) 
             dominated_in_phi = false; 
             for z = 1:size(phi,1)
                 if weakdominates(phi(z,D+1:D+nobj), obj_x(1:nobj))
-                    dominated_in_phi = true; 
+                    dominated_in_phi = true; %这时说明种群中存在粒子能够在所有参与方上弱支配新生成的粒子，这时就不会再对phi进行更新了
                     break;
                 end
             end
 
-            if ~dominated_in_phi 
-                phi = [phi(~arrayfun(@(z) dominates(...  
+            if ~dominated_in_phi %更新phi，去掉phi中至少在一个方向上比他差的
+                phi = [phi(~arrayfun(@(z) dominates(...  %只要在一方上被支配就删掉他
                     obj_x(1+choosed_direction:singlenobj+choosed_direction), phi(z,D+1+choosed_direction:D+singlenobj+choosed_direction)) || ...
                     dominates(obj_x(1+cd:singlenobj+cd), phi(z,D+1+cd:D+singlenobj+cd)), 1:size(phi,1)), :); x];
             end
@@ -102,7 +105,8 @@ while ~( check_1(p_1, D, singlenobj, pf_1) && check_2(p_2, D, singlenobj, pf_2) 
     end
     
 end
-t = toc; 
+t = toc; % 结束计时并返回运行时间
+% fprintf('simple算法dim=%.0f时运行时间为 %.7f 秒\n', D,t);
 
 
 

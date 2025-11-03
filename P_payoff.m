@@ -5,10 +5,10 @@
 % addpath(genpath(pwd)); %将所有目录和子目录添加到运行文件夹下
 function t = P_payoff(D)
 % the hole framework begin
-dm = 2; % 参与者数量
-nobj = 4; %目标数量
-singlenobj = 2; 
-common_pf = ones(1,D); 
+dm = 2; % 参与者数量，一共有两个人
+nobj = 4; %目标数量,一共有4个目标
+singlenobj = 2; % 每个参与方的有两个目标
+common_pf = ones(1,D); %公共解是全1的向量
 common_obj = BPAOAZ(common_pf);
 common = [common_pf common_obj];
 
@@ -21,36 +21,36 @@ population = [X0 Y0]; % 初始化种群
 tic; % 开始计时
 while ~isequal(population, common)
     %随机均匀地从种群P中选择一个粒子
-    randnum = randi([1, size(population,1)]);
-    mutate_x = population(randnum,1:D); 
-    mutate_y = mutate_x; 
+    randnum = randi([1, size(population,1)]); % 从1到种群粒子数量之间随机选择一个整数
+    mutate_x = population(randnum,1:D); %从种群中随机选择一个粒子,原粒子
+    mutate_y = mutate_x; %即将进行变异的粒子
     
     %被选择到的粒子进行进化 one-bit mutation，即随机选择一位然后将其变异
-    mutation_index = randi([1, D]); 
-    mutate_y(mutation_index) = 1 - mutate_y(mutation_index); 
+    mutation_index = randi([1, D]); % 随机选择一个位置
+    mutate_y(mutation_index) = 1 - mutate_y(mutation_index); %完成一位翻转
     
-    obj_mutate_x = BPAOAZ(mutate_x);
+    obj_mutate_x = BPAOAZ(mutate_x);%没有变异之前的
     x =[mutate_x  obj_mutate_x];
 
     obj_mutate_y = BPAOAZ(mutate_y);%变异之后的
     y =[mutate_y  obj_mutate_y];
     
     %根据总收益决定是否添加新粒子
-    MP_payoff = 0; 
-    for d = 0:dm-1 
+    MP_payoff = 0; %初始化多方的收益为0
+    for d = 0:dm-1 %要遍历所有的参与方，来求多方的收益
         MP_payoff = MP_payoff + Payoff(x,y,d,D,singlenobj);
     end
     
     %对变异得到的粒子进行筛选
-    if MP_payoff >= 0 
-        population(randnum, :) = []; 
+    if MP_payoff >= 0 % 如果多方收益大于0，就说明这次变异时有效的，可以将变异后的粒子添加进来
+        population(randnum, :) = []; %删除变异之前的被支配的粒子
         population = [population; y];
     end
  
 end
 
 t = toc; % 结束计时并返回运行时间
-
+% fprintf('payoff算法dim=%.0f时运行时间为 %.7f 秒\n', D,t);
 
 
 
@@ -58,10 +58,12 @@ t = toc; % 结束计时并返回运行时间
 function payoff = Payoff(x,y,d,dim,singlenobj) % 求的是从x进化到y的收益
     x_obj = x(dim+1+singlenobj*d : dim+singlenobj+singlenobj*d);
     y_obj = y(dim+1+singlenobj*d : dim+singlenobj+singlenobj*d);
-    if all(x_obj <= y_obj) 
-        payoff = sum(y_obj - x_obj); 
-    elseif all(x_obj >= y_obj) 
-        payoff = sum(y_obj - x_obj); 
+    if all(x_obj <= y_obj) %变异得到的y变好
+%         payoff = sum(y_obj - x_obj); %收益为正,大的减去小的
+        payoff = 1; %正向
+    elseif all(x_obj >= y_obj) %变异得到的y变差
+%         payoff = sum(y_obj - x_obj); %收益为负，小的减去大的
+        payoff = -1; %反向
     else % 互不支配
         payoff = 0;
     end

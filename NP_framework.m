@@ -4,7 +4,7 @@ close all %清理橱窗
 rng(1) %确保随机数生成是可重复的
 addpath(genpath(pwd)); %将所有目录和子目录添加到运行文件夹下
 
-maxFE_values = 100:10:1000;
+maxFE_values = 1000:10:3000;
 
 % 运行10次并计算均值和方差
 num_runs = 10;
@@ -44,7 +44,7 @@ std_multi_3 = std(results_multi_3, 0, 1);
 figure;
 hold on;
 colors = lines(3); % 为不同问题生成颜色
-legend_entries = {'simple','cons','multi'}; % 图例内容
+legend_entries = {'simple','cons','DEMO'}; % 图例内容
 
 % 画图
 plot(maxFE_values, mean_simple_3, '-', 'Color', colors(1, :), 'LineWidth', 1);
@@ -63,7 +63,7 @@ fill([maxFE_values, fliplr(maxFE_values)], ...
     colors(3, :), 'FaceAlpha', 0.3, 'EdgeColor', 'none');
 
 % 设置图形属性
-xlabel('Maximum number of evaluations of UAV5', 'FontSize', 12);
+xlabel('Fitness Evaluations', 'FontSize', 12);
 ylabel('epsilon', 'FontSize', 12);
 legend(legend_entries, 'Location', 'Best');
 grid on;
@@ -79,7 +79,7 @@ results_simple_1 = zeros(1, num_maxFE); % 存储epsilon_simple结果
 % simple
 for i = 1:num_maxFE
     maxFE = maxFE_values(i);
-    results_simple_1(1, i) = NP_simple(maxFE, UAV1(1));
+    results_simple_1(1, i) = NP_simple0(maxFE, UAV1(1));
 end
 end
 
@@ -90,7 +90,7 @@ results_simple_2 = zeros(1, num_maxFE); % 存储epsilon_simple结果
 % simple
 for i = 1:num_maxFE
     maxFE = maxFE_values(i);
-    results_simple_2(1, i) = NP_simple(maxFE, UAV3(1));
+    results_simple_2(1, i) = NP_simple0(maxFE, UAV3(1));
 end
 end
 
@@ -101,7 +101,7 @@ results_simple_3 = zeros(1, num_maxFE); % 存储epsilon_simple结果
 % simple
 for i = 1:num_maxFE
     maxFE = maxFE_values(i);
-    results_simple_3(1, i) = NP_simple(maxFE, UAV5(1));
+    results_simple_3(1, i) = NP_simple0(maxFE, UAV5(1));
 end
 end
 
